@@ -7,29 +7,76 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-interface Event {
+interface JobEvent {
   id: string;
-  title: string;
-  date: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  customerAddress: string;
+  lineItems: { description: string; price: string }[];
+  scheduledStart: string; // ISO string format (e.g., "2025-01-30T10:00")
+  scheduledEnd: string; // ISO string format (e.g., "2025-01-30T12:00")
+  dispatchedTo: string;
+  jobSource: string;
+  privateNotes: string;
+  drivingStatus: "Drive" | "In Progress" | "Arrived";
+  jobStatus: "Start" | "In Progress" | "Finished";
+  reviewStatus: "Send" | "Sent";
+  paymentStatus: "Unpaid" | "Paid";
+  paymentType: "" | "Card" | "Check" | "Cash" | "Zelle";
 }
 
 const JobCalendar: React.FC = () => {
   const router = useRouter();
-  const [events, setEvents] = useState<Event[]>([
+  const [jobEvents, setJobEvents] = useState<JobEvent[]>([
     {
       id: "1",
-      title: "Window Cleaning - John Doe",
-      date: "2025-01-30T10:00:00",
+      customerName: "John Doe",
+      customerPhone: "555-123-4567",
+      customerEmail: "john.doe@example.com",
+      customerAddress: "123 Main St, San Francisco, CA",
+      lineItems: [{ description: "Window Cleaning", price: "199" }],
+      scheduledStart: "2025-01-30T10:00",
+      scheduledEnd: "2025-01-30T12:00",
+      dispatchedTo: "Steven Radonich",
+      jobSource: "Online",
+      privateNotes: "Initially quoted $199, gave veteran’s discount",
+      drivingStatus: "Drive",
+      jobStatus: "Start",
+      reviewStatus: "Send",
+      paymentStatus: "Unpaid",
+      paymentType: "",
     },
     {
       id: "2",
-      title: "Gutter Cleaning - Sarah Smith",
-      date: "2025-01-30T14:00:00",
+      customerName: "Sarah Smith",
+      customerPhone: "555-987-6543",
+      customerEmail: "sarah.smith@example.com",
+      customerAddress: "456 Oak St, San Francisco, CA",
+      lineItems: [{ description: "Gutter Cleaning", price: "299" }],
+      scheduledStart: "2025-01-30T14:00",
+      scheduledEnd: "2025-01-30T16:00",
+      dispatchedTo: "Michael Chen",
+      jobSource: "Referral",
+      privateNotes: "Roof access required, bring safety harness",
+      drivingStatus: "In Progress",
+      jobStatus: "In Progress",
+      reviewStatus: "Sent",
+      paymentStatus: "Paid",
+      paymentType: "Card",
     },
   ]);
 
   const [view, setView] = useState("timeGridDay");
   const calendarRef = React.useRef<FullCalendar>(null);
+
+  // Convert job events to FullCalendar's required format
+  const calendarEvents = jobEvents.map((event) => ({
+    id: event.id,
+    title: `${event.customerName} - ${event.lineItems[0].description}`,
+    start: event.scheduledStart,
+    end: event.scheduledEnd,
+  }));
 
   // Load stored date on component mount
   useEffect(() => {
@@ -43,20 +90,6 @@ const JobCalendar: React.FC = () => {
   const handleDatesSet = (arg: { view: { currentStart: Date } }) => {
     const currentDate = arg.view.currentStart;
     sessionStorage.setItem("calendarDate", currentDate.toISOString());
-  };
-
-  const handleDateClick = (info: { dateStr: string }) => {
-    const title = prompt("Enter job title:");
-    if (title) {
-      setEvents([
-        ...events,
-        {
-          id: String(events.length + 1),
-          title,
-          date: info.dateStr + "T10:00:00",
-        },
-      ]);
-    }
   };
 
   return (
@@ -117,8 +150,7 @@ const JobCalendar: React.FC = () => {
             buttonText: "Week",
           },
         }}
-        events={events}
-        dateClick={handleDateClick}
+        events={calendarEvents} // Use updated event structure
         eventClick={(info) => {
           sessionStorage.setItem("calendarDate", info.event.startStr);
           router.push(`/jobs/${info.event.id}`);
