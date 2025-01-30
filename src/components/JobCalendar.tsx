@@ -14,8 +14,8 @@ interface JobEvent {
   customerEmail: string;
   customerAddress: string;
   lineItems: { description: string; price: string }[];
-  scheduledStart: string; // ISO string format (e.g., "2025-01-30T10:00")
-  scheduledEnd: string; // ISO string format (e.g., "2025-01-30T12:00")
+  scheduledStart: string;
+  scheduledEnd: string;
   dispatchedTo: string;
   jobSource: string;
   privateNotes: string;
@@ -30,6 +30,8 @@ const JobCalendar: React.FC = () => {
   const router = useRouter();
   const [view, setView] = useState("timeGridDay");
   const calendarRef = React.useRef<FullCalendar>(null);
+
+  console.log("Session storage: ", sessionStorage.getItem("calendarDate"));
 
   const [jobEvents, setJobEvents] = useState<JobEvent[]>([
     {
@@ -76,18 +78,12 @@ const JobCalendar: React.FC = () => {
 
   const calculateTotalPrice = (
     lineItems: { description: string; price: string }[]
-  ): number => {
-    return lineItems.reduce((total, item) => total + parseFloat(item.price), 0);
-  };
+  ) => lineItems.reduce((total, item) => total + parseFloat(item.price), 0);
 
   const formatLineItemTitles = (
     lineItems: { description: string; price: string }[]
-  ): string => {
-    if (lineItems.length === 0) return "No line items";
-    return lineItems.map((item) => item.description).join(", ");
-  };
+  ) => lineItems.map((item) => item.description).join(", ") || "No line items";
 
-  // Convert job events to FullCalendar's required format
   const calendarEvents = jobEvents.map((event) => ({
     id: event.id,
     title: `${event.customerName} - $${calculateTotalPrice(
@@ -97,26 +93,41 @@ const JobCalendar: React.FC = () => {
     end: event.scheduledEnd,
   }));
 
+  // Track whether we have restored the date from sessionStorage
+  const [hasRestoredDate, setHasRestoredDate] = useState(false);
+
   // Load stored date on component mount
   useEffect(() => {
     const storedDate = sessionStorage.getItem("calendarDate");
     if (calendarRef.current && storedDate) {
+      console.log("📅 Restoring stored date:", storedDate);
       calendarRef.current.getApi().gotoDate(storedDate);
+      setHasRestoredDate(true); // Prevent first `handleDatesSet` from overwriting
     }
   }, []);
 
-  // Save current date when view changes
+  useEffect(() => {
+    const logStorageChange = (event: StorageEvent) => {
+      console.log("📢 sessionStorage changed:", event);
+    };
+
+    window.addEventListener("storage", logStorageChange);
+    return () => window.removeEventListener("storage", logStorageChange);
+  }, []);
+
   const handleDatesSet = (arg: { view: { currentStart: Date } }) => {
-    const currentDate = arg.view.currentStart;
-    sessionStorage.setItem("calendarDate", currentDate.toISOString());
+    const newDate = arg.view.currentStart.toISOString();
+
+    // Only update sessionStorage **if we already restored the stored date**
+    if (hasRestoredDate) {
+      console.log("📆 Calendar date changed to:", newDate);
+      sessionStorage.setItem("calendarDate", newDate);
+    }
   };
 
-  // Function to change calendar view dynamically
   const changeView = (newView: string) => {
     setView(newView);
-    if (calendarRef.current) {
-      calendarRef.current.getApi().changeView(newView);
-    }
+    calendarRef.current?.getApi().changeView(newView);
   };
 
   return (
@@ -169,9 +180,9 @@ const JobCalendar: React.FC = () => {
             buttonText: "Week",
           },
         }}
-        events={calendarEvents} // Use updated event structure
+        events={calendarEvents}
         eventClick={(info) => {
-          sessionStorage.setItem("calendarDate", info.event.startStr);
+          sessionStorage.setItem("calendarDate", info.event.startStr); // Store date before navigating
           router.push(`/jobs/${info.event.id}`);
         }}
         slotMinTime="06:00:00"
