@@ -20,8 +20,6 @@ services:
     restart: always
     depends_on:
       - db
-    volumes:
-      - .:/app
     environment:
       - DEBUG=True
       - DB_NAME=mydatabase
@@ -31,7 +29,6 @@ services:
       - DB_PORT=5432
     ports:
       - "8000:8000"
-    command: ["gunicorn", "myproject.wsgi:application", "--bind", "0.0.0.0:8000"]
 
 volumes:
   postgres_data:
