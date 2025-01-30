@@ -31,8 +31,6 @@ const JobCalendar: React.FC = () => {
   const [view, setView] = useState("timeGridDay");
   const calendarRef = React.useRef<FullCalendar>(null);
 
-  console.log("Session storage: ", sessionStorage.getItem("calendarDate"));
-
   const [jobEvents, setJobEvents] = useState<JobEvent[]>([
     {
       id: "1",
@@ -96,23 +94,34 @@ const JobCalendar: React.FC = () => {
   // Track whether we have restored the date from sessionStorage
   const [hasRestoredDate, setHasRestoredDate] = useState(false);
 
+  // Track if the page was refreshed (better method)
+  let isPageRefreshed = false;
+
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      // This means it's a back-forward navigation
+      isPageRefreshed = false;
+    } else {
+      // This means the page was refreshed
+      isPageRefreshed = true;
+    }
+  });
+
   // Load stored date on component mount
   useEffect(() => {
     const storedDate = sessionStorage.getItem("calendarDate");
-    if (calendarRef.current && storedDate) {
-      console.log("📅 Restoring stored date:", storedDate);
-      calendarRef.current.getApi().gotoDate(storedDate);
-      setHasRestoredDate(true); // Prevent first `handleDatesSet` from overwriting
+    const today = new Date().toLocaleDateString("en-CA"); // "YYYY-MM-DD" format in local time
+
+    if (calendarRef.current) {
+      if (isPageRefreshed || !storedDate) {
+        // If refreshed or no stored date, go to today
+        calendarRef.current.getApi().gotoDate(today);
+      } else {
+        // Otherwise, restore the last viewed date
+        calendarRef.current.getApi().gotoDate(storedDate);
+      }
+      setHasRestoredDate(true); // Prevent early overwrite
     }
-  }, []);
-
-  useEffect(() => {
-    const logStorageChange = (event: StorageEvent) => {
-      console.log("📢 sessionStorage changed:", event);
-    };
-
-    window.addEventListener("storage", logStorageChange);
-    return () => window.removeEventListener("storage", logStorageChange);
   }, []);
 
   const handleDatesSet = (arg: { view: { currentStart: Date } }) => {
@@ -120,7 +129,6 @@ const JobCalendar: React.FC = () => {
 
     // Only update sessionStorage **if we already restored the stored date**
     if (hasRestoredDate) {
-      console.log("📆 Calendar date changed to:", newDate);
       sessionStorage.setItem("calendarDate", newDate);
     }
   };
