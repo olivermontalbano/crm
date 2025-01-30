@@ -16,7 +16,8 @@ const NewJobPage: React.FC = () => {
   const [lineItems, setLineItems] = useState([
     { description: "Window Cleaning", price: "199" },
   ]);
-  const [scheduledDate, setScheduledDate] = useState("2025-02-01T10:00");
+  const [scheduledStart, setScheduledStart] = useState("2025-02-01T10:00");
+  const [scheduledEnd, setScheduledEnd] = useState("2025-02-01T10:00");
   const [dispatchedTo, setDispatchedTo] = useState("Steven Radonich");
   const [jobSource, setJobSource] = useState("Online");
   const [privateNotes, setPrivateNotes] = useState(
@@ -51,7 +52,17 @@ const NewJobPage: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <h1 className="text-2xl font-bold mb-4">Create New Job</h1>
+      {/* Back Button and Heading */}
+      <div className="flex items-center justify-between w-full max-w-md mb-4">
+        <button
+          onClick={() => router.back()}
+          className="bg-gray-300 p-2 rounded hover:bg-gray-400"
+        >
+          ← Back
+        </button>
+        <h1 className="text-2xl font-bold">Create New Job</h1>
+        <div className="w-12"></div> {/* Spacer to balance the layout */}
+      </div>
 
       <form
         onSubmit={handleSubmit}
@@ -188,17 +199,34 @@ const NewJobPage: React.FC = () => {
             </button>
           </div>
           {editMode.scheduled ? (
-            <input
-              type="datetime-local"
-              value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              className="border p-2 rounded w-full"
-            />
+            <>
+              <label className="block text-sm font-medium text-gray-600">
+                Start Time
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduledStart}
+                onChange={(e) => setScheduledStart(e.target.value)}
+                className="border p-2 rounded w-full mb-2"
+              />
+
+              <label className="block text-sm font-medium text-gray-600">
+                End Time
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduledEnd}
+                onChange={(e) => setScheduledEnd(e.target.value)}
+                className="border p-2 rounded w-full"
+              />
+            </>
           ) : (
-            <p>{new Date(scheduledDate).toLocaleString()}</p>
+            <p>
+              {new Date(scheduledStart).toLocaleString()} -{" "}
+              {new Date(scheduledEnd).toLocaleString()}
+            </p>
           )}
         </div>
-
         {/* Dispatched To */}
         <div className="border p-4 rounded-lg shadow-sm">
           <div className="flex justify-between items-center">

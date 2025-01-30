@@ -10,7 +10,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 interface Event {
   id: string;
   title: string;
-  date: string; // Ensure this is in ISO format
+  date: string;
 }
 
 const JobCalendar: React.FC = () => {
@@ -28,9 +28,22 @@ const JobCalendar: React.FC = () => {
     },
   ]);
 
+  const [view, setView] = useState("timeGridDay");
+  const calendarRef = React.useRef<FullCalendar>(null);
+
+  // Load stored date on component mount
   useEffect(() => {
-    console.log("Loaded events:", events); // Debugging log
-  }, [events]);
+    const storedDate = sessionStorage.getItem("calendarDate");
+    if (calendarRef.current && storedDate) {
+      calendarRef.current.getApi().gotoDate(storedDate);
+    }
+  }, []);
+
+  // Save current date when view changes
+  const handleDatesSet = (arg: { view: { currentStart: Date } }) => {
+    const currentDate = arg.view.currentStart;
+    sessionStorage.setItem("calendarDate", currentDate.toISOString());
+  };
 
   const handleDateClick = (info: { dateStr: string }) => {
     const title = prompt("Enter job title:");
@@ -41,20 +54,73 @@ const JobCalendar: React.FC = () => {
           id: String(events.length + 1),
           title,
           date: info.dateStr + "T10:00:00",
-        }, // Ensure time is set
+        },
       ]);
     }
   };
 
   return (
-    <div className="relative w-screen h-screen">
+    <div className="relative w-screen h-screen p-4 flex flex-col">
+      {/* View Toggle Buttons */}
+      <div className="flex justify-center gap-2 mb-4">
+        <button
+          onClick={() => setView("timeGridDay")}
+          className={`px-4 py-2 rounded ${
+            view === "timeGridDay" ? "bg-blue-500 text-white" : "bg-gray-300"
+          }`}
+        >
+          Day
+        </button>
+        <button
+          onClick={() => setView("timeGridThreeDay")}
+          className={`px-4 py-2 rounded ${
+            view === "timeGridThreeDay"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-300"
+          }`}
+        >
+          3 Days
+        </button>
+        <button
+          onClick={() => setView("timeGridWeek")}
+          className={`px-4 py-2 rounded ${
+            view === "timeGridWeek" ? "bg-blue-500 text-white" : "bg-gray-300"
+          }`}
+        >
+          Week
+        </button>
+      </div>
+
+      {/* Calendar Component */}
       <FullCalendar
+        ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridDay"
+        datesSet={handleDatesSet}
+        customButtons={{
+          dayView: { text: "Day", click: () => setView("timeGridDay") },
+          threeDayView: {
+            text: "3 Days",
+            click: () => setView("timeGridThreeDay"),
+          },
+          weekView: { text: "Week", click: () => setView("timeGridWeek") },
+        }}
+        views={{
+          timeGridThreeDay: {
+            type: "timeGrid",
+            duration: { days: 3 },
+            buttonText: "3 Days",
+          },
+          timeGridWeek: {
+            type: "timeGrid",
+            duration: { days: 7 },
+            buttonText: "Week",
+          },
+        }}
         events={events}
         dateClick={handleDateClick}
         eventClick={(info) => {
-          console.log("Event clicked:", info.event.id); // Debugging log
+          sessionStorage.setItem("calendarDate", info.event.startStr);
           router.push(`/jobs/${info.event.id}`);
         }}
         slotMinTime="06:00:00"
@@ -64,7 +130,13 @@ const JobCalendar: React.FC = () => {
 
       {/* Floating Plus Button */}
       <button
-        onClick={() => router.push("/jobs/new")}
+        onClick={() => {
+          const currentDate = calendarRef.current?.getApi().getDate();
+          if (currentDate) {
+            sessionStorage.setItem("calendarDate", currentDate.toISOString());
+          }
+          router.push("/jobs/new");
+        }}
         className="fixed bottom-8 right-8 bg-blue-500 text-white text-3xl rounded-full w-16 h-16 flex items-center justify-center shadow-lg z-50"
         style={{ border: "none", cursor: "pointer" }}
       >

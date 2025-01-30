@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation"; // Import useRouter for navigation
 
 const JobDetailsPage: React.FC = () => {
   const { id } = useParams();
+  const router = useRouter(); // Initialize the router
 
   const [editMode, setEditMode] = useState({
     customer: false,
@@ -22,7 +23,8 @@ const JobDetailsPage: React.FC = () => {
     customerEmail: "john.doe@example.com",
     customerAddress: "123 Main St, San Francisco, CA",
     lineItems: [{ description: "Window Cleaning", price: "199" }],
-    scheduledDate: "2025-02-01T10:00",
+    scheduledStart: "2025-02-01T10:00",
+    scheduledEnd: "2025-02-01T12:00", // Added end time
     dispatchedTo: "Steven Radonich",
     jobSource: "Online",
     privateNotes: "Initially quoted $199, gave veteran’s discount",
@@ -61,7 +63,17 @@ const JobDetailsPage: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <h1 className="text-2xl font-bold mb-4">Job Details</h1>
+      {/* Back Button and Heading */}
+      <div className="flex items-center justify-between w-full max-w-5xl mb-4">
+        <button
+          onClick={() => router.back()} // Navigate back
+          className="bg-gray-300 p-2 rounded hover:bg-gray-400"
+        >
+          ← Back
+        </button>
+        <h1 className="text-2xl font-bold">Job Details</h1>
+        <div className="w-12"></div> {/* Spacer to balance the layout */}
+      </div>
 
       {/* ✅ Updated Layout to be Horizontally Aligned */}
       <div className="flex flex-row flex-wrap gap-4 w-full max-w-5xl">
@@ -204,18 +216,34 @@ const JobDetailsPage: React.FC = () => {
             </button>
           </div>
           {editMode.scheduled ? (
-            <input
-              type="datetime-local"
-              value={job.scheduledDate}
-              onChange={(e) =>
-                setJob({ ...job, scheduledDate: e.target.value })
-              }
-              className="border p-2 rounded w-full"
-            />
+            <>
+              <label className="block text-sm font-medium text-gray-600">Start Time</label>
+              <input
+                type="datetime-local"
+                value={job.scheduledStart}
+                onChange={(e) =>
+                  setJob({ ...job, scheduledStart: e.target.value })
+                }
+                className="border p-2 rounded w-full mb-2"
+              />
+
+              <label className="block text-sm font-medium text-gray-600">End Time</label>
+              <input
+                type="datetime-local"
+                value={job.scheduledEnd}
+                onChange={(e) =>
+                  setJob({ ...job, scheduledEnd: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
+            </>
           ) : (
-            <p>{new Date(job.scheduledDate).toLocaleString()}</p>
+            <p>
+              {new Date(job.scheduledStart).toLocaleString()} - {new Date(job.scheduledEnd).toLocaleString()}
+            </p>
           )}
         </div>
+
 
         {/* Dispatched To */}
         <div className="border p-4 rounded-lg shadow-sm">
