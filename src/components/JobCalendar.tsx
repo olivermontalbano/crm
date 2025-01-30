@@ -35,7 +35,11 @@ const JobCalendar: React.FC = () => {
       customerPhone: "555-123-4567",
       customerEmail: "john.doe@example.com",
       customerAddress: "123 Main St, San Francisco, CA",
-      lineItems: [{ description: "Window Cleaning", price: "199" }],
+      lineItems: [
+        { description: "Window Cleaning", price: "199" },
+        { description: "Gutter Cleaning", price: "99" },
+        { description: "Solar Cleaning", price: "99" },
+      ],
       scheduledStart: "2025-01-30T10:00",
       scheduledEnd: "2025-01-30T12:00",
       dispatchedTo: "Steven Radonich",
@@ -70,10 +74,25 @@ const JobCalendar: React.FC = () => {
   const [view, setView] = useState("timeGridDay");
   const calendarRef = React.useRef<FullCalendar>(null);
 
+  const calculateTotalPrice = (
+    lineItems: { description: string; price: string }[]
+  ): number => {
+    return lineItems.reduce((total, item) => total + parseFloat(item.price), 0);
+  };
+
+  const formatLineItemTitles = (
+    lineItems: { description: string; price: string }[]
+  ): string => {
+    if (lineItems.length === 0) return "No line items";
+    return lineItems.map((item) => item.description).join(", ");
+  };
+
   // Convert job events to FullCalendar's required format
   const calendarEvents = jobEvents.map((event) => ({
     id: event.id,
-    title: `${event.customerName} - ${event.lineItems[0].description}`,
+    title: `${event.customerName} - $${calculateTotalPrice(
+      event.lineItems
+    )} - ${formatLineItemTitles(event.lineItems)}`,
     start: event.scheduledStart,
     end: event.scheduledEnd,
   }));
