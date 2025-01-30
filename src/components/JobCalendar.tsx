@@ -28,6 +28,9 @@ interface JobEvent {
 
 const JobCalendar: React.FC = () => {
   const router = useRouter();
+  const [view, setView] = useState("timeGridDay");
+  const calendarRef = React.useRef<FullCalendar>(null);
+
   const [jobEvents, setJobEvents] = useState<JobEvent[]>([
     {
       id: "1",
@@ -71,9 +74,6 @@ const JobCalendar: React.FC = () => {
     },
   ]);
 
-  const [view, setView] = useState("timeGridDay");
-  const calendarRef = React.useRef<FullCalendar>(null);
-
   const calculateTotalPrice = (
     lineItems: { description: string; price: string }[]
   ): number => {
@@ -111,12 +111,20 @@ const JobCalendar: React.FC = () => {
     sessionStorage.setItem("calendarDate", currentDate.toISOString());
   };
 
+  // Function to change calendar view dynamically
+  const changeView = (newView: string) => {
+    setView(newView);
+    if (calendarRef.current) {
+      calendarRef.current.getApi().changeView(newView);
+    }
+  };
+
   return (
     <div className="relative w-screen h-screen p-4 flex flex-col">
       {/* View Toggle Buttons */}
       <div className="flex justify-center gap-2 mb-4">
         <button
-          onClick={() => setView("timeGridDay")}
+          onClick={() => changeView("timeGridDay")}
           className={`px-4 py-2 rounded ${
             view === "timeGridDay" ? "bg-blue-500 text-white" : "bg-gray-300"
           }`}
@@ -124,7 +132,7 @@ const JobCalendar: React.FC = () => {
           Day
         </button>
         <button
-          onClick={() => setView("timeGridThreeDay")}
+          onClick={() => changeView("timeGridThreeDay")}
           className={`px-4 py-2 rounded ${
             view === "timeGridThreeDay"
               ? "bg-blue-500 text-white"
@@ -134,7 +142,7 @@ const JobCalendar: React.FC = () => {
           3 Days
         </button>
         <button
-          onClick={() => setView("timeGridWeek")}
+          onClick={() => changeView("timeGridWeek")}
           className={`px-4 py-2 rounded ${
             view === "timeGridWeek" ? "bg-blue-500 text-white" : "bg-gray-300"
           }`}
@@ -147,16 +155,8 @@ const JobCalendar: React.FC = () => {
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridDay"
+        initialView={view}
         datesSet={handleDatesSet}
-        customButtons={{
-          dayView: { text: "Day", click: () => setView("timeGridDay") },
-          threeDayView: {
-            text: "3 Days",
-            click: () => setView("timeGridThreeDay"),
-          },
-          weekView: { text: "Week", click: () => setView("timeGridWeek") },
-        }}
         views={{
           timeGridThreeDay: {
             type: "timeGrid",
