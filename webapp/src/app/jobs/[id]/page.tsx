@@ -1,10 +1,34 @@
 "use client";
 
 import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation"; // Import useRouter for navigation
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
+
+interface LineItem {
+  description: string;
+  price: string; // Consider using `number` if appropriate
+}
+
+interface Job {
+  id: string; // Adjust the type (`string` or `number`) based on your actual `id` value
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  customerAddress: string;
+  lineItems: LineItem[];
+  scheduledStart: string; // Consider using `Date` if you handle Date objects
+  scheduledEnd: string; // Consider using `Date` if you handle Date objects
+  dispatchedTo: string;
+  jobSource: string;
+  privateNotes: string;
+  drivingStatus: string;
+  jobStatus: string;
+  reviewStatus: string;
+  paymentStatus: string;
+  paymentType: string;
+}
 
 const JobDetailsPage: React.FC = () => {
-  const { id } = useParams();
+  // const { id } = useParams();
   const router = useRouter(); // Initialize the router
 
   const [editMode, setEditMode] = useState({
@@ -16,8 +40,8 @@ const JobDetailsPage: React.FC = () => {
     privateNotes: false,
   });
 
-  const [job, setJob] = useState({
-    id,
+  const [job, setJob] = useState<Job>({
+    id: "1",
     customerName: "John Doe",
     customerPhone: "555-123-4567",
     customerEmail: "john.doe@example.com",
@@ -217,7 +241,9 @@ const JobDetailsPage: React.FC = () => {
           </div>
           {editMode.scheduled ? (
             <>
-              <label className="block text-sm font-medium text-gray-600">Start Time</label>
+              <label className="block text-sm font-medium text-gray-600">
+                Start Time
+              </label>
               <input
                 type="datetime-local"
                 value={job.scheduledStart}
@@ -227,7 +253,9 @@ const JobDetailsPage: React.FC = () => {
                 className="border p-2 rounded w-full mb-2"
               />
 
-              <label className="block text-sm font-medium text-gray-600">End Time</label>
+              <label className="block text-sm font-medium text-gray-600">
+                End Time
+              </label>
               <input
                 type="datetime-local"
                 value={job.scheduledEnd}
@@ -239,11 +267,11 @@ const JobDetailsPage: React.FC = () => {
             </>
           ) : (
             <p>
-              {new Date(job.scheduledStart).toLocaleString()} - {new Date(job.scheduledEnd).toLocaleString()}
+              {new Date(job.scheduledStart).toLocaleString()} -{" "}
+              {new Date(job.scheduledEnd).toLocaleString()}
             </p>
           )}
         </div>
-
 
         {/* Dispatched To */}
         <div className="border p-4 rounded-lg shadow-sm">

@@ -15,7 +15,27 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="My API",
+        default_version="v1",
+        description="API documentation for my Django project",
+        terms_of_service="https://www.example.com/terms/",
+        contact=openapi.Contact(email="contact@example.com"),
+        license=openapi.License(name="MIT License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Swagger UI
+    path("docs/", schema_view.with_ui("swagger", cache_timeout=0), name="swagger-ui"),
+    
+    # Raw JSON Schema
+    path("json", schema_view.without_ui(cache_timeout=0), name="schema-json")
 ]

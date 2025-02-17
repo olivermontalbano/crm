@@ -31,7 +31,7 @@ const JobCalendar: React.FC = () => {
   const [view, setView] = useState("timeGridDay");
   const calendarRef = React.useRef<FullCalendar>(null);
 
-  const [jobEvents, setJobEvents] = useState<JobEvent[]>([
+  const [jobEvents] = useState<JobEvent[]>([
     {
       id: "1",
       customerName: "John Doe",
@@ -122,7 +122,7 @@ const JobCalendar: React.FC = () => {
       }
       setHasRestoredDate(true); // Prevent early overwrite
     }
-  }, []);
+  }, [isPageRefreshed]);
 
   const handleDatesSet = (arg: { view: { currentStart: Date } }) => {
     const newDate = arg.view.currentStart.toISOString();
